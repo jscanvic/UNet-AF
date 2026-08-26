@@ -1,0 +1,17 @@
+physics_modality: "deblurring"
+physics_padding: "circular"
+epochs: 1000
+lr: 0.0005
+weight_decay: 0.0
+batch_size: 5
+model_kind: "unet"
+unet_impl: "equivariant"
+unet_scales: 5
+unet_residual: true
+unet_bias: true
+unet_padding: "circular"
+unet_norm: "layer_norm_AF"
+unet_pooling: "kaiser_sinc_blur_pool"
+unet_upsampling: "kaiser_sinc_upsampling"
+unet_activation: "kaiser_sinc_relu"
+eq_translation_mode: "circular"

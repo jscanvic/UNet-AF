@@ -1,0 +1,9 @@
+physics_modality: "deblurring"
+physics_padding: "circular"
+epochs: 1000
+lr: 0.0001
+weight_decay: 0.0
+batch_size: 5
+model_kind: "ram"
+ram_init: "default_random_init"
+eq_translation_mode: "circular"

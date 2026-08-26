@@ -1,0 +1,16 @@
+physics_modality: "denoising"
+epochs: 6000
+lr: 0.0005
+weight_decay: 0.0
+batch_size: 5
+model_kind: "unet"
+unet_impl: "deepinv"
+unet_scales: 5
+unet_residual: false
+unet_bias: true
+unet_padding: "zeros"
+unet_norm: "batch_norm"
+unet_pooling: "max_pool"
+unet_upsampling: "nn_upsample"
+unet_activation: "relu"
+eq_translation_mode: "circular"

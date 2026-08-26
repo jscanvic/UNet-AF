@@ -1,0 +1,332 @@
+# Consolidated test configs. Each key names a test and refers to a training config via `base` (optional).
+# Entries should contain only non-redundant overrides; when `base` is present the training
+# config is loaded and the `overrides` are applied on top.
+
+defaults:
+  overrides:
+    epochs: 0
+    run_name_prefix: "Test_"
+    eq_metric_kind: "basic"
+    eq_metric_backbone: "psnr"
+
+tests:
+  Main_UNet-AF:
+    base: "Main_UNet-AF.yaml"
+    overrides:
+      checkpoint_path: "Main_UNet-AF.pth.tar"
+      checkpoint_run_id: "ae436862cb9a495baaa830ad72a28b86"
+
+  Main_UNet-AF_FasterLayerNormAF:
+    base: "Main_UNet-AF.yaml"
+    overrides:
+      run_name: "Main_UNet-AF_FasterLayerNormAF"
+      checkpoint_path: "Main_UNet-AF.pth.tar"
+      checkpoint_run_id: "ae436862cb9a495baaa830ad72a28b86"
+      unet_norm: "faster_layer_norm_AF"
+
+  Main_UNet-AFF:
+    base: "Main_UNet-AFF.yaml"
+    overrides:
+      run_name: "Main_UNet-AFF"
+      checkpoint_path: "Main_UNet-AFF.pth.tar"
+      checkpoint_run_id: "a4e294440c9b414c8a74125acb1595d8"
+
+  Main_UNet-AFF_Norm=None:
+    base: "Main_UNet-AFF.yaml"
+    overrides:
+      run_name: "Main_UNet-AFF_Norm=None"
+      checkpoint_path: "Main_UNet-AFF.pth.tar"
+      checkpoint_run_id: "a4e294440c9b414c8a74125acb1595d8"
+      unet_norm: "none"
+
+  Main_UNet-AFF_Transfer:
+    base: "Main_UNet-AFF.yaml"
+    overrides:
+      run_name: "Main_UNet-AFF"
+      checkpoint_path: "Ablation_Activation=FilteredReLU.pth.tar"
+      checkpoint_run_id: "16d5af2c0a444ec1a98af337a08992ef"
+
+  Main_UNet-AFF_Transfer_SecondScaleFFT:
+    base: "Main_UNet-AFF.yaml"
+    overrides:
+      run_name: "Main_UNet-AFF_SecondScaleFFT"
+      checkpoint_path: "Ablation_Activation=FilteredReLU.pth.tar"
+      checkpoint_run_id: "16d5af2c0a444ec1a98af337a08992ef"
+      second_scale_fft: true
+
+  # Additional tests mirroring training configs (placeholders for checkpoint metadata)
+  Ablation_Activation=GELU:
+    base: "Ablation_Activation=GELU.yaml"
+    overrides:
+      checkpoint_path: "Ablation_Activation=GELU.pth.tar"
+      checkpoint_run_id: "323f98afede742828fd25e1db9ec8c92"
+
+  Ablation_Activation=None:
+    base: "Ablation_Activation=None.yaml"
+    overrides:
+      checkpoint_path: "Ablation_Activation=None.pth.tar"
+      checkpoint_run_id: "494a4422eed94ee4876e96875c17445f"
+
+  Ablation_Activation=FilteredReLU:
+    base: "Ablation_Activation=FilteredReLU.yaml"
+    overrides:
+      checkpoint_path: "Ablation_Activation=FilteredReLU.pth.tar"
+      checkpoint_run_id: "16d5af2c0a444ec1a98af337a08992ef"
+
+  Ablation_Activation=ReLU:
+    base: "Ablation_Activation=ReLU.yaml"
+    overrides:
+      checkpoint_path: "Ablation_Activation=ReLU.pth.tar"
+      checkpoint_run_id: "a71c4ba6268942e5b7189a73d10111dc"
+
+  Ablation_Activation=FilteredPoly:
+    base: "Ablation_Activation=FilteredPoly.yaml"
+    overrides:
+      checkpoint_path: "Ablation_Activation=FilteredPoly.pth.tar"
+      checkpoint_run_id: "833e9447596e41ee97abc536db5fe8df"
+
+  Ablation_Activation=Poly:
+    base: "Ablation_Activation=Poly.yaml"
+    overrides:
+      checkpoint_path: "Ablation_Activation=Poly.pth.tar"
+      checkpoint_run_id: "ac9639a98f0940ed94ab0a441a0ceb90"
+
+  Ablation_Filter=KaiserSinc:
+    base: "Ablation_Filter=KaiserSinc.yaml"
+    overrides:
+      checkpoint_path: "Ablation_Filter=KaiserSinc.pth.tar"
+      checkpoint_run_id: "8668bcecd047403e84a64bfe5a8fc97a"
+
+  Ablation_NoFilteredUpconv:
+    base: "Ablation_NoFilteredUpconv.yaml"
+    overrides:
+      checkpoint_path: "Ablation_NoFilteredUpconv.pth.tar"
+      checkpoint_run_id: "65f03c89b3484158a0fead2a056e7e1d"
+
+  Ablation_NoResCon:
+    base: "Ablation_NoResCon.yaml"
+    overrides:
+      checkpoint_path: "Ablation_NoResCon.pth.tar"
+      checkpoint_run_id: "a03e1fba22e04102895b44663cc89162"
+
+  Ablation_Normalization=BatchNorm:
+    base: "Ablation_Normalization=BatchNorm.yaml"
+    overrides:
+      checkpoint_path: "Ablation_Normalization=BatchNorm.pth.tar"
+      checkpoint_run_id: "4e54002fe4eb43c09fb77ac85be75e7c"
+
+  Ablation_Normalization=InstanceNorm:
+    base: "Ablation_Normalization=InstanceNorm.yaml"
+    overrides:
+      checkpoint_path: "Ablation_Normalization=InstanceNorm.pth.tar"
+      checkpoint_run_id: "57c8f5ebde314681b0175cd7ae27ff6f"
+
+  Ablation_Normalization=LayerNorm:
+    base: "Ablation_Normalization=LayerNorm.yaml"
+    overrides:
+      checkpoint_path: "Ablation_Normalization=LayerNorm.pth.tar"
+      checkpoint_run_id: "28794a88dec7412faa53537a96f48981"
+
+  Ablation_Normalization=None:
+    base: "Ablation_Normalization=None.yaml"
+    overrides:
+      checkpoint_path: "Ablation_Normalization=None.pth.tar"
+      checkpoint_run_id: "1c60c7f9f8374de1a14ee68cdb10c6fc"
+
+  Ablation_Padding=Zero:
+    base: "Ablation_Padding=Zero.yaml"
+    overrides:
+      checkpoint_path: "Ablation_Padding=Zero.pth.tar"
+      checkpoint_run_id: "f3374161db20462fba3dd67ff733980b"
+
+  Ablation_Padding=Reflect:
+    base: "Ablation_Padding=Reflect.yaml"
+    overrides:
+      checkpoint_path: "Ablation_Padding=Reflect.pth.tar"
+      checkpoint_run_id: "c75fb19b8ff34fa7be013ca81f2d0de1"
+
+  Ablation_Padding=Valid:
+    base: "Ablation_Padding=Valid.yaml"
+    overrides:
+      checkpoint_path: "Ablation_Padding=Valid.pth.tar"
+      checkpoint_run_id: "ce7d307bb40f44a182dadfaec848c564"
+
+  Ablation_Pooling=AvgPool:
+    base: "Ablation_Pooling=AvgPool.yaml"
+    overrides:
+      checkpoint_path: "Ablation_Pooling=AvgPool.pth.tar"
+      checkpoint_run_id: "eae0cc9c15d947158c56e672eac13be8"
+
+  Ablation_Pooling=MaxBlurPool:
+    base: "Ablation_Pooling=MaxBlurPool.yaml"
+    overrides:
+      checkpoint_path: "Ablation_Pooling=MaxBlurPool.pth.tar"
+      checkpoint_run_id: "3adc425eb70e4f26a54c8dcb84cb2d55"
+
+  Ablation_UNet-AFF_ActPadding=Zeros:
+    base: "Ablation_UNet-AFF_ActPadding=Zeros.yaml"
+    overrides:
+      checkpoint_path: "..."
+      checkpoint_run_id: "..."
+
+  Ablation_UNet-AFF_ActPadding=Circular_ActFiltersKind=StyleGAN3:
+    base: "Ablation_UNet-AFF_ActPadding=Circular_ActFiltersKind=StyleGAN3.yaml"
+    overrides:
+      checkpoint_path: "..."
+      checkpoint_run_id: "..."
+
+  Ablation_UNet-AFF_ActPadding=Zeros_ActFiltersKind=StyleGAN3:
+    base: "Ablation_UNet-AFF_ActPadding=Zeros_ActFiltersKind=StyleGAN3.yaml"
+    overrides:
+      checkpoint_path: "..."
+      checkpoint_run_id: "..."
+
+  Increment_1_Ronneberger:
+    base: "Increment_1_Ronneberger.yaml"
+    overrides:
+      checkpoint_path: "Increment_1_Ronneberger.pth.tar"
+      checkpoint_run_id: "1cc15e06bdf34450965ee5401e2500a9"
+
+  Increment_2_DeepInverse:
+    base: "Increment_2_DeepInverse.yaml"
+    overrides:
+      checkpoint_path: "Increment_2_DeepInverse.pth.tar"
+      checkpoint_run_id: "50bd9510a51c4baea6c05f4bb41223f2"
+
+  # Untrained, only used for inference speed benchmarks
+  Increment_2_DeepInverse_Impl=UNet-AF:
+    base: "Increment_2_DeepInverse_Impl=UNet-AF.yaml"
+
+  Increment_3_Baseline:
+    base: "Increment_3_Baseline.yaml"
+    overrides:
+      checkpoint_path: "Increment_3_Baseline.pth.tar"
+      checkpoint_run_id: "b4d7e7541a9e453eb717de2407bf3fd5"
+
+  Increment_3_Baseline_FasterLayerNormAF:
+    base: "Increment_3_Baseline.yaml"
+    overrides:
+      run_name: "Increment_3_Baseline_FasterLayerNormAF"
+      checkpoint_path: "Increment_3_Baseline.pth.tar"
+      checkpoint_run_id: "b4d7e7541a9e453eb717de2407bf3fd5"
+      unet_norm: "faster_layer_norm_AF"
+
+  Increment_4_CircularPadding:
+    base: "Increment_4_CircularPadding.yaml"
+    overrides:
+      checkpoint_path: "Increment_4_CircularPadding.pth.tar"
+      checkpoint_run_id: "bb6bf325a98446b29fb30fd5ebcf7beb"
+
+  Increment_5_FilteredGELU:
+    base: "Increment_5_FilteredGELU.yaml"
+    overrides:
+      checkpoint_path: "Increment_5_FilteredGELU.pth.tar"
+      checkpoint_run_id: "6b911906216643a6a7a46b9e18da1e36"
+
+  Increment_6_FilteredUpconv:
+    base: "Increment_6_FilteredUpconv.yaml"
+    overrides:
+      checkpoint_path: "Increment_6_FilteredUpconv.pth.tar"
+      checkpoint_run_id: "464d3eff3463436cb21ad8be55c9c348"
+
+  ValidBlur_DeepInverse:
+    base: "ValidBlur_DeepInverse.yaml"
+    overrides:
+      checkpoint_path: "ValidBlur_DeepInverse.pth.tar"
+      checkpoint_run_id: "edc288cabc7c4c48b040316c7bcdfdc4"
+
+  ValidBlur_Ronneberger:
+    base: "ValidBlur_Ronneberger.yaml"
+    overrides:
+      checkpoint_path: "ValidBlur_Ronneberger.pth.tar"
+      checkpoint_run_id: "9b774b68448d4e14b62316947dd293ae"
+
+  ValidBlur_UNet-AF:
+    base: "ValidBlur_UNet-AF.yaml"
+    overrides:
+      checkpoint_path: "ValidBlur_UNet-AF.pth.tar"
+      checkpoint_run_id: "3791816e525549e4b88ee27b5065adcf"
+
+  ValidBlur_UNet-AF_Padding=Circular:
+    base: "ValidBlur_UNet-AF_Padding=Circular.yaml"
+    overrides:
+      checkpoint_path: "ValidBlur_UNet-AF_Padding=Circular.pth.tar"
+      checkpoint_run_id: "08ff30119bfa4c0e972dc624e37e4309"
+
+  ValidBlur_UNet-AF_Filter=KaiserSinc:
+    base: "ValidBlur_UNet-AF_Filter=KaiserSinc.yaml"
+    overrides:
+      checkpoint_path: "ValidBlur_UNet-AF_Filter=KaiserSinc.pth.tar"
+      checkpoint_run_id: "c7036f6f71694f35b9e297f242d7bb2f"
+
+  ValidBlur_UNet-AF_Padding=Circular_Filter=KaiserSinc:
+    base: "ValidBlur_UNet-AF_Padding=Circular_Filter=KaiserSinc.yaml"
+    overrides:
+      checkpoint_path: "ValidBlur_UNet-AF_Padding=Circular_Filter=KaiserSinc.pth.tar"
+      checkpoint_run_id: "dc9e0d8b5e824c8cad10ddc066d70613"
+
+  Denoising_DeepInverse:
+    base: "Denoising_DeepInverse.yaml"
+    overrides:
+      checkpoint_path: "Denoising_DeepInverse.pth.tar"
+      checkpoint_run_id: "d43e8016793c45d9b14b5faa52634446"
+
+  Denoising_DeepInverse_NoResCon:
+    base: "Denoising_DeepInverse_NoResCon.yaml"
+    overrides:
+      checkpoint_path: "Denoising_DeepInverse_NoResCon.pth.tar"
+      checkpoint_run_id: "d945fb9c89a14a33bc2ef3a808e079f7"
+
+  Denoising_Ronneberger:
+    base: "Denoising_Ronneberger.yaml"
+    overrides:
+      checkpoint_path: "Denoising_Ronneberger.pth.tar"
+      checkpoint_run_id: "80636c0b4a2c4559826b2c4a80f32b9f"
+
+  Denoising_UNet-AF:
+    base: "Denoising_UNet-AF.yaml"
+    overrides:
+      checkpoint_path: "Denoising_UNet-AF.pth.tar"
+      checkpoint_run_id: "905a3de84cb74debbf6f63f0fc5e94de"
+
+  Denoising_UNet-AF_NoResCon:
+    base: "Denoising_UNet-AF_NoResCon.yaml"
+    overrides:
+      checkpoint_path: "Denoising_UNet-AF_NoResCon.pth.tar"
+      checkpoint_run_id: "efcf4ec25e344a6c9d2508cd4e324aab"
+
+  ValidBlurv2_Ronneberger:
+    base: "ValidBlurv2_Ronneberger.yaml"
+    overrides:
+      checkpoint_path: "ValidBlurv2_Ronneberger.pth.tar"
+      checkpoint_run_id: "5aa6c1a1bb5844cb8bb65de04f9b6c62"
+
+  ValidBlurv2_DeepInverse:
+    base: "ValidBlurv2_DeepInverse.yaml"
+    overrides:
+      checkpoint_path: "ValidBlurv2_DeepInverse.pth.tar"
+      checkpoint_run_id: "8d726f8165ca435eb0a9469efe4ba2f3"
+
+  ValidBlurv2_UNet-AF:
+    base: "ValidBlurv2_UNet-AF.yaml"
+    overrides:
+      checkpoint_path: "ValidBlurv2_UNet-AF.pth.tar"
+      checkpoint_run_id: "db0e01f9c396426db503a480ed0fcfde"
+
+  ValidBlurv2_UNet-AF_Padding=Circular:
+    base: "ValidBlurv2_UNet-AF_Padding=Circular.yaml"
+    overrides:
+      checkpoint_path: "ValidBlurv2_UNet-AF_Padding=Circular.pth.tar"
+      checkpoint_run_id: "79731c2969fc4563af37aa3debd8016a"
+
+  ValidBlurv2_UNet-AF_Filter=KaiserSinc:
+    base: "ValidBlurv2_UNet-AF_Filter=KaiserSinc.yaml"
+    overrides:
+      checkpoint_path: "ValidBlurv2_UNet-AF_Filter=KaiserSinc.pth.tar"
+      checkpoint_run_id: "638c3c5610ea4db8b5dcce57e6db4d9f"
+
+  ValidBlurv2_UNet-AF_Padding=Circular_Filter=KaiserSinc:
+    base: "ValidBlurv2_UNet-AF_Padding=Circular_Filter=KaiserSinc.yaml"
+    overrides:
+      checkpoint_path: "ValidBlurv2_UNet-AF_Padding=Circular_Filter=KaiserSinc.pth.tar"
+      checkpoint_run_id: "ed350e1e1ed24acdbf28284949c6edb4"
