@@ -107,7 +107,7 @@ If you find our code useful in your research, please consider citing us!
 
 ```
 @article{scanvic2026unet,
-  title={UNet-AF: An alias-free UNet for image restoration},
+  title={UNet-AF: Alias-free UNet architectures},
   author={Scanvic, J{\'e}r{\'e}my and Barth{\'e}lemy, Quentin and Tachella, Juli{\'a}n},
   journal={arXiv preprint arXiv:2603.11323},
   year={2026}
