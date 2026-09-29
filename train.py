@@ -16,6 +16,7 @@ from torch.utils.data import DataLoader
 
 from unet_af.config import load_model_from_config
 from unet_af.dataset import DATASET_DIRS
+from unet_af.devices import default_device, empty_cache, synchronize
 from unet_af.metrics import EQUIV, ContinuousTranslation, compute_instability
 from unet_af.mlops import MLFLOW_EXPERIMENT_NAME
 from unet_af.trainer import ResampledMeasurements, Trainer
@@ -193,7 +194,7 @@ def load_config() -> dict:
         "--device",
         type=str,
         default=None,
-        help="Device override (defaults to cuda if available)",
+        help="Device override (defaults to cuda, then mps, if available)",
     )
     parser.add_argument(
         "--div2k-deblur-path",
@@ -312,7 +313,7 @@ if __name__ == "__main__":
     config = load_config()
 
     # Device and paths
-    device = config.get("device") or ("cuda" if torch.cuda.is_available() else "cpu")
+    device = config.get("device") or str(default_device())
     physics_modality = config.get("physics_modality", "deblurring")
     physics_padding = config.get("physics_padding", "circular")
     base_root = Path(config["div2k_deblur_path"])
@@ -611,7 +612,7 @@ if __name__ == "__main__":
                 metrics[std_key] = std_log
 
     # Measure inference speed
-    torch.cuda.empty_cache()
+    empty_cache(device)
     model.eval()
 
     # Warm-up pass
@@ -620,7 +621,7 @@ if __name__ == "__main__":
             x, y = batch
             y = y.to(device, non_blocking=True)
             _ = model(y, physics)
-    torch.cuda.synchronize()
+    synchronize(device)
 
     total_time = 0.0
     total_images = 0
@@ -630,10 +631,10 @@ if __name__ == "__main__":
             batch_size = y.size(0)
             total_images += batch_size
             y = y.to(device, non_blocking=True)
-            torch.cuda.synchronize()
+            synchronize(device)
             start = time.perf_counter()
             _ = model(y, physics)
-            torch.cuda.synchronize()
+            synchronize(device)
             total_time += time.perf_counter() - start
 
     metrics["INFER_TIME"] = (total_time / total_images) * 1000

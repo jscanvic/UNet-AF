@@ -9,6 +9,7 @@
 """Custom PyTorch ops for efficient resampling of 2D images."""
 
 import os
+import warnings
 
 import numpy as np
 import torch
@@ -31,6 +32,15 @@ def _init():
             extra_cuda_cflags=["--use_fast_math", "--allow-unsupported-compiler"],
         )
     return True
+
+
+def _plugin_for(x):
+    """CUDA plugin, or the Metal module with the same interface for MPS tensors."""
+    if x.device.type == "mps":
+        from . import upfirdn2d_mps
+
+        return upfirdn2d_mps
+    return _plugin
 
 
 def _parse_scaling(scaling):
@@ -161,13 +171,25 @@ def upfirdn2d(x, f, up=1, down=1, padding=0, flip_filter=False, gain=1, impl="cu
                      (default: 0).
         flip_filter: False = convolution, True = correlation (default: False).
         gain:        Overall scaling factor for signal magnitude (default: 1).
-        impl:        Implementation to use. Can be `'ref'` or `'cuda'` (default: `'cuda'`).
+        impl:        Implementation to use. Can be `'ref'`, `'cuda'` or `'metal'` (default: `'cuda'`).
 
     Returns:
         Tensor of the shape `[batch_size, num_channels, out_height, out_width]`.
     """
     assert isinstance(x, torch.Tensor)
-    assert impl in ["ref", "cuda"]
+    assert impl in ["ref", "cuda", "metal"]
+    if impl in ("cuda", "metal") and x.device.type == "mps":
+        from .upfirdn2d_mps import mps_supported
+
+        if mps_supported(x, f):
+            return _upfirdn2d_cuda(
+                up=up, down=down, padding=padding, flip_filter=flip_filter, gain=gain
+            ).apply(x, f)
+        warnings.warn(
+            "upfirdn2d called with parameters that have no Metal kernel, using reference fallback",
+            RuntimeWarning,
+            stacklevel=2,
+        )
     if impl == "cuda" and x.device.type == "cuda" and _init():
         return _upfirdn2d_cuda(
             up=up, down=down, padding=padding, flip_filter=flip_filter, gain=gain
@@ -263,7 +285,7 @@ def _upfirdn2d_cuda(up=1, down=1, padding=0, flip_filter=False, gain=1):
             assert isinstance(f, torch.Tensor) and f.ndim in [1, 2]
             y = x
             if f.ndim == 2:
-                y = _plugin.upfirdn2d(
+                y = _plugin_for(x).upfirdn2d(
                     y,
                     f,
                     upx,
@@ -278,7 +300,7 @@ def _upfirdn2d_cuda(up=1, down=1, padding=0, flip_filter=False, gain=1):
                     gain,
                 )
             else:
-                y = _plugin.upfirdn2d(
+                y = _plugin_for(x).upfirdn2d(
                     y,
                     f.unsqueeze(0),
                     upx,
@@ -292,7 +314,7 @@ def _upfirdn2d_cuda(up=1, down=1, padding=0, flip_filter=False, gain=1):
                     flip_filter,
                     1.0,
                 )
-                y = _plugin.upfirdn2d(
+                y = _plugin_for(x).upfirdn2d(
                     y,
                     f.unsqueeze(1),
                     1,
@@ -364,7 +386,7 @@ def filter2d(x, f, padding=0, flip_filter=False, gain=1, impl="cuda"):
                      (default: 0).
         flip_filter: False = convolution, True = correlation (default: False).
         gain:        Overall scaling factor for signal magnitude (default: 1).
-        impl:        Implementation to use. Can be `'ref'` or `'cuda'` (default: `'cuda'`).
+        impl:        Implementation to use. Can be `'ref'`, `'cuda'` or `'metal'` (default: `'cuda'`).
 
     Returns:
         Tensor of the shape `[batch_size, num_channels, out_height, out_width]`.
@@ -404,7 +426,7 @@ def upsample2d(x, f, up=2, padding=0, flip_filter=False, gain=1, impl="cuda"):
                      (default: 0).
         flip_filter: False = convolution, True = correlation (default: False).
         gain:        Overall scaling factor for signal magnitude (default: 1).
-        impl:        Implementation to use. Can be `'ref'` or `'cuda'` (default: `'cuda'`).
+        impl:        Implementation to use. Can be `'ref'`, `'cuda'` or `'metal'` (default: `'cuda'`).
 
     Returns:
         Tensor of the shape `[batch_size, num_channels, out_height, out_width]`.
@@ -453,7 +475,7 @@ def downsample2d(x, f, down=2, padding=0, flip_filter=False, gain=1, impl="cuda"
                      (default: 0).
         flip_filter: False = convolution, True = correlation (default: False).
         gain:        Overall scaling factor for signal magnitude (default: 1).
-        impl:        Implementation to use. Can be `'ref'` or `'cuda'` (default: `'cuda'`).
+        impl:        Implementation to use. Can be `'ref'`, `'cuda'` or `'metal'` (default: `'cuda'`).
 
     Returns:
         Tensor of the shape `[batch_size, num_channels, out_height, out_width]`.

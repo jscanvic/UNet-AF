@@ -23,6 +23,7 @@ import torchvision.transforms.functional as TF
 import inspect
 import time
 from unet_af.models.center_crop_reconstructor import CenterCropReconstructor
+from unet_af.devices import default_device
 
 
 class ResampledMeasurements(torch.utils.data.Dataset):
@@ -90,7 +91,7 @@ class Trainer:
         for how we expect data to be provided.
     :param bool online_measurements: Generate new measurements `y` in an online manner at each iteration by calling
         `y=physics(x)`. If `False` (default), the measurements are loaded from the training dataset.
-    :param str, torch.device device: Device on which to run the training (e.g., 'cuda' or 'cpu'). Default is 'cuda' if available, otherwise 'cpu'.
+    :param str, torch.device device: Device on which to run the training (e.g., 'cuda' or 'cpu'). Default is 'cuda' if available, then 'mps', otherwise 'cpu'.
 
     |sep|
 
@@ -302,7 +303,7 @@ class Trainer:
     metrics: Metric | list[Metric] | None = field(default_factory=PSNR)
     compute_train_metrics: bool = True
     early_stop_on_losses: bool = False
-    device: str | torch.device = "cuda" if torch.cuda.is_available() else "cpu"
+    device: str | torch.device = field(default_factory=default_device)
     ckpt_pretrained: str | None = None
     save_path: str | Path | None = "."
     compare_no_learning: bool = False

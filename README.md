@@ -37,6 +37,8 @@ The implementation of UNet-AF and its faster variant (UNet-AF Fast) are located 
 
 Our proposed CUDA kernel for efficient FIR filtered leaky-ReLU with periodic boundary conditions can be found in [`unet_af/ops/circular_filtered_lrelu`](unet_af/ops/circular_filtered_lrelu). It is adapted from the base implementation of [StyleGAN3](https://github.com/nvlabs/stylegan3) which handles zero-padded boundary conditions instead. A slightly modified copy of it is redistributed in [`unet_af/ops/stylegan3`](unet_af/ops/stylegan3) for the sake of simplicity.
 
+On Apple Silicon, this op and the StyleGAN3 ops run as Metal kernels when their input is on the `mps` device. They compile at first use, so no build step is needed. Tests are in [`tests`](tests).
+
 ## Equivariance metric
 
 Our proposed metric to measure the equivariance of a UNet network to sub-pixel continuous translations can be found in [`unet_af/metrics/equiv.py`](unet_af/metrics/equiv.py) along with an implementation of periodic sinc translation in [`unet_af/metrics/continuous_translation.py`](unet_af/metrics/continuous_translation.py).

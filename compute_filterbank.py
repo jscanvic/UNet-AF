@@ -4,6 +4,7 @@ import numpy as np
 import torch
 from skimage import data
 
+from unet_af.devices import default_device
 from unet_af.filters import compute_filter_bank
 from unet_af.io import save_filter_bank
 
@@ -99,7 +100,7 @@ def main():
     np.random.seed(42)
 
     symmetric = not args.asymmetric
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = default_device()
     print(f"Using device: {device}")
 
     # Set defaults based on optimizer selection
