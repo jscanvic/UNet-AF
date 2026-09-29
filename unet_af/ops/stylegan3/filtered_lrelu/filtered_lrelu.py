@@ -12,7 +12,9 @@ import warnings
 import numpy as np
 import torch
 
-from unet_af.ops.stylegan3 import bias_act, custom_ops, misc, upfirdn2d
+from unet_af.ops.stylegan3 import custom_ops, misc
+from unet_af.ops.stylegan3.bias_act.bias_act import bias_act
+from unet_af.ops.stylegan3.upfirdn2d.upfirdn2d import upfirdn2d
 
 # ----------------------------------------------------------------------------
 
@@ -125,13 +127,37 @@ def filtered_lrelu(
         slope:       Slope on the negative side of leaky ReLU (default: 0.2).
         clamp:       Maximum magnitude for leaky ReLU output (default: None).
         flip_filter: False = convolution, True = correlation (default: False).
-        impl:        Implementation to use. Can be `'ref'` or `'cuda'` (default: `'cuda'`).
+        impl:        Implementation to use. Can be `'ref'`, `'cuda'` or `'metal'` (default: `'cuda'`).
+                     On MPS tensors, `'cuda'` and `'metal'` both select the Metal kernels.
 
     Returns:
         Tensor of the shape `[batch_size, num_channels, out_height, out_width]`.
     """
     assert isinstance(x, torch.Tensor)
-    assert impl in ["ref", "cuda"]
+    assert impl in ["ref", "cuda", "metal"]
+    if impl in ("cuda", "metal") and x.device.type == "mps":
+        from .filtered_lrelu_mps import filtered_lrelu_mps, mps_supported
+
+        pad = _parse_padding(padding)
+        if mps_supported(x, fu, fd, b, up, down, pad):
+            return filtered_lrelu_mps(
+                x,
+                fu=fu,
+                fd=fd,
+                b=b,
+                up=up,
+                down=down,
+                padding=pad,
+                gain=gain,
+                slope=slope,
+                clamp=clamp,
+                flip_filter=flip_filter,
+            )
+        warnings.warn(
+            "filtered_lrelu called with parameters that have no Metal kernel, using reference fallback",
+            RuntimeWarning,
+            stacklevel=2,
+        )
     if impl == "cuda" and x.device.type == "cuda" and _init():
         return _filtered_lrelu_cuda(
             up=up,
@@ -321,7 +347,7 @@ def _filtered_lrelu_cuda(
                 )
 
                 y = x.add(b.unsqueeze(-1).unsqueeze(-1))  # Add bias.
-                y = upfirdn2d.upfirdn2d(
+                y = upfirdn2d(
                     x=y,
                     f=fu,
                     up=up,
@@ -332,7 +358,7 @@ def _filtered_lrelu_cuda(
                 so = _plugin.filtered_lrelu_act_(
                     y, si, sx, sy, gain, slope, clamp, write_signs
                 )  # Activation function and sign handling. Modifies y in-place.
-                y = upfirdn2d.upfirdn2d(
+                y = upfirdn2d(
                     x=y, f=fd, down=down, flip_filter=flip_filter
                 )  # Downsample.
 

@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from unet_af.devices import default_device
 from unet_af.ops import circular_filtered_lrelu
 from unet_af.ops.stylegan3 import filtered_lrelu
 from unet_af.io import load_filter_bank
@@ -257,7 +258,7 @@ class KaiserSincReLUv2(nn.Module):
         )
 
         # Preload cache
-        preload_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        preload_device = default_device()
         preload_dtype = torch.float32
         for size in [128, 64, 32, 16, 8]:
             _ = self.get_filters(size, device=preload_device, dtype=preload_dtype)
@@ -370,7 +371,7 @@ class KaiserSincReLUv2(nn.Module):
             )
         elif self.padding_mode == "zeros":
             padding = fu.numel() - 1
-            return filtered_lrelu.filtered_lrelu(
+            return filtered_lrelu(
                 x,
                 up=self.up,
                 down=self.down,
@@ -549,13 +550,19 @@ class FasterLayerNorm_AF(nn.Module):
         )
         self.eps = eps
 
-    @torch.compile
     def forward(self, x):
         """
         Forward pass for layer normalization.
 
         :param torch.Tensor x: Input tensor
         """
+        # Inductor's MPS backend (torch 2.8) fails to generate code for this reduction
+        # once shapes become dynamic, so run eagerly on Apple Silicon.
+        if x.device.type == "mps":
+            return self._forward(x)
+        return self._forward_compiled(x)
+
+    def _forward(self, x):
         CHW = math.prod(x.shape[-3:])
         x = x.to(memory_format=torch.channels_last)
         u = x.mean(1, keepdim=True)
@@ -564,6 +571,8 @@ class FasterLayerNorm_AF(nn.Module):
         x = x_bar * torch.rsqrt(s + self.eps)
         x = self.weight * x
         return x + self.bias
+
+    _forward_compiled = torch.compile(_forward)
 
     def _load_from_state_dict(
         self,

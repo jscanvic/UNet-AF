@@ -32,9 +32,10 @@ namespaces = true
 [tool.setuptools.package-data]
 unet_af = ["test.yaml", "configs/*.yaml", "filters/*.pt"]
 "unet_af.ops.stylegan3" = ["LICENSE.txt"]
-"unet_af.ops.stylegan3.bias_act" = ["*.cpp", "*.cu", "*.h"]
+"unet_af.ops.stylegan3.bias_act" = ["*.cpp", "*.cu", "*.h", "*.metal"]
 "unet_af.ops.stylegan3.filtered_lrelu" = ["*.cpp", "*.cu", "*.h"]
-"unet_af.ops.stylegan3.upfirdn2d" = ["*.cpp", "*.cu", "*.h"]
+"unet_af.ops.stylegan3.upfirdn2d" = ["*.cpp", "*.cu", "*.h", "*.metal"]
+"unet_af.ops.circular_filtered_lrelu" = ["*.cpp", "*.cu", "*.h", "*.metal"]
 
 [tool.uv]
 managed = false

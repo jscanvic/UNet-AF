@@ -9,6 +9,7 @@
 """Custom PyTorch ops for efficient bias and activation."""
 
 import os
+import warnings
 
 import numpy as np
 import torch
@@ -111,6 +112,15 @@ def _init():
     return True
 
 
+def _plugin_for(x):
+    """CUDA plugin, or the Metal module with the same interface for MPS tensors."""
+    if x.device.type == "mps":
+        from . import bias_act_mps
+
+        return bias_act_mps
+    return _plugin
+
+
 # ----------------------------------------------------------------------------
 
 
@@ -141,13 +151,27 @@ def bias_act(
                 If unsure, consider specifying 1.
         clamp:  Clamp the output values to `[-clamp, +clamp]`, or `None` to disable
                 the clamping (default).
-        impl:   Name of the implementation to use. Can be `"ref"` or `"cuda"` (default).
+        impl:   Name of the implementation to use. Can be `"ref"`, `"cuda"` (default)
+                or `"metal"`. On MPS tensors, `"cuda"` and `"metal"` both select the
+                Metal kernel.
 
     Returns:
         Tensor of the same shape and datatype as `x`.
     """
     assert isinstance(x, torch.Tensor)
-    assert impl in ["ref", "cuda"]
+    assert impl in ["ref", "cuda", "metal"]
+    if impl in ("cuda", "metal") and x.device.type == "mps":
+        from .bias_act_mps import mps_supported
+
+        if mps_supported(x, b):
+            return _bias_act_cuda(
+                dim=dim, act=act, alpha=alpha, gain=gain, clamp=clamp
+            ).apply(x, b)
+        warnings.warn(
+            "bias_act called with parameters that have no Metal kernel, using reference fallback",
+            RuntimeWarning,
+            stacklevel=2,
+        )
     if impl == "cuda" and x.device.type == "cuda" and _init():
         return _bias_act_cuda(
             dim=dim, act=act, alpha=alpha, gain=gain, clamp=clamp
@@ -224,7 +248,7 @@ def _bias_act_cuda(dim=1, act="linear", alpha=None, gain=None, clamp=None):
             b = b.contiguous() if b is not None else _null_tensor
             y = x
             if act != "linear" or gain != 1 or clamp >= 0 or b is not _null_tensor:
-                y = _plugin.bias_act(
+                y = _plugin_for(x).bias_act(
                     x,
                     b,
                     _null_tensor,
@@ -240,7 +264,9 @@ def _bias_act_cuda(dim=1, act="linear", alpha=None, gain=None, clamp=None):
             ctx.save_for_backward(
                 x if "x" in spec.ref or spec.has_2nd_grad else _null_tensor,
                 b if "x" in spec.ref or spec.has_2nd_grad else _null_tensor,
-                y if "y" in spec.ref else _null_tensor,
+                # The gradient kernel masks clamped outputs using y, so keep it whenever
+                # clamping, even for activations whose derivative doesn't need it (linear).
+                y if "y" in spec.ref or clamp >= 0 else _null_tensor,
             )
             return y
 
@@ -270,7 +296,7 @@ def _bias_act_cuda(dim=1, act="linear", alpha=None, gain=None, clamp=None):
                 if dy.ndim > 2 and dy.stride(1) == 1
                 else torch.contiguous_format
             )
-            dx = _plugin.bias_act(
+            dx = _plugin_for(dy).bias_act(
                 dy, b, x, y, _null_tensor, 1, dim, spec.cuda_idx, alpha, gain, clamp
             )
             ctx.save_for_backward(dy if spec.has_2nd_grad else _null_tensor, x, b, y)
@@ -291,7 +317,7 @@ def _bias_act_cuda(dim=1, act="linear", alpha=None, gain=None, clamp=None):
             if spec.has_2nd_grad and (
                 ctx.needs_input_grad[1] or ctx.needs_input_grad[2]
             ):
-                d_x = _plugin.bias_act(
+                d_x = _plugin_for(d_dx).bias_act(
                     d_dx, b, x, y, dy, 2, dim, spec.cuda_idx, alpha, gain, clamp
                 )
 

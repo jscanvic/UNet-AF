@@ -104,13 +104,38 @@ def circular_filtered_lrelu(
         slope:       Slope on the negative side of leaky ReLU (default: 0.2).
         clamp:       Maximum magnitude for leaky ReLU output (default: None).
         flip_filter: False = convolution, True = correlation (default: False).
-        impl:        Implementation to use. Can be `'ref'` or `'cuda'` (default: `'cuda'`).
+        impl:        Implementation to use. Can be `'ref'`, `'cuda'` or `'metal'` (default: `'cuda'`).
+                     On MPS tensors, `'cuda'` and `'metal'` both select the Metal kernels.
 
     Returns:
         Tensor of the shape `[batch_size, num_channels, out_height, out_width]`.
     """
     assert isinstance(x, torch.Tensor)
-    assert impl in ["ref", "cuda"]
+    assert impl in ["ref", "cuda", "metal"]
+    if impl in ("cuda", "metal") and x.device.type == "mps":
+        from .circular_filtered_lrelu_mps import (
+            circular_filtered_lrelu_mps,
+            mps_supported,
+        )
+
+        if mps_supported(x, fu, fd, b, up, down):
+            return circular_filtered_lrelu_mps(
+                x,
+                fu=fu,
+                fd=fd,
+                b=b,
+                up=up,
+                down=down,
+                gain=gain,
+                slope=slope,
+                clamp=clamp,
+                flip_filter=flip_filter,
+            )
+        warnings.warn(
+            "circular_filtered_lrelu called with parameters that have no Metal kernel, using reference fallback",
+            RuntimeWarning,
+            stacklevel=2,
+        )
     if impl == "cuda" and x.device.type == "cuda" and _init():
         return _circular_filtered_lrelu_cuda(
             up=up,
